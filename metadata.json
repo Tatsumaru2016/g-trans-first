@@ -1,0 +1,6 @@
+{
+  "name": "G.trans",
+  "description": "An immersive, vertical scrollytelling web experience presenting G.trans: the next-generation Morphing Neo-Retro Spatial Network that dissolves language barrier along the Z-axis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
