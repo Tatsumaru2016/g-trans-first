@@ -52,7 +52,7 @@ export const FloatingProfileCards: React.FC<FloatingProfileCardsProps> = ({
           opacity: 1 - stage2Progress * 0.8,
         }}
         transition={{ type: "spring", damping: 30, stiffness: 120 }}
-        className="absolute w-80 md:w-96 neo-card rounded-2xl p-6 border border-white/60 text-left pointer-events-auto shadow-xl"
+        className="absolute w-80 md:w-96 neo-card rounded-2xl p-6 border border-white/60 text-left pointer-events-none shadow-xl"
         style={{
           transformStyle: "preserve-3d",
           transform: "perspective(1000px)",
@@ -114,7 +114,7 @@ export const FloatingProfileCards: React.FC<FloatingProfileCardsProps> = ({
           opacity: 1 - stage2Progress * 0.8,
         }}
         transition={{ type: "spring", damping: 30, stiffness: 120 }}
-        className="absolute w-80 md:w-96 neo-card rounded-2xl p-6 border border-white/60 text-left pointer-events-auto shadow-xl"
+        className="absolute w-80 md:w-96 neo-card rounded-2xl p-6 border border-white/60 text-left pointer-events-none shadow-xl"
         style={{
           transformStyle: "preserve-3d",
           transform: "perspective(1000px)",

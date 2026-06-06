@@ -11,16 +11,15 @@ import { Stage } from "../types";
 interface SpatialCanvasProps {
   scrollProgress: number; // 0 to 1
   mousePos: { x: number; y: number };
-  onStageChange: (stage: Stage) => void;
 }
 
 export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
   scrollProgress,
   mousePos,
-  onStageChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollProgressRef = useRef(scrollProgress);
 
   // References for Three.js objects
   const stateRef = useRef({
@@ -31,6 +30,10 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
     mouseX: 0,
     mouseY: 0,
   });
+
+  useEffect(() => {
+    scrollProgressRef.current = scrollProgress;
+  }, [scrollProgress]);
 
   // Keep mouse in ref to avoid re-initializing
   useEffect(() => {
@@ -664,7 +667,7 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       const state = stateRef.current;
       // Spring elastic interpolation
       const prev = state.lerpedProgress;
-      state.lerpedProgress += (scrollProgress - state.lerpedProgress) * 0.075;
+      state.lerpedProgress += (scrollProgressRef.current - state.lerpedProgress) * 0.075;
       const progress = state.lerpedProgress;
 
       // Calculate instantaneous scroll speed to feed into chromatic shader thresholds
@@ -680,10 +683,7 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       else if (progress < 0.85) activeStage = Stage.MACRO_WARP;
       else activeStage = Stage.ULTIMATE_NEXUS;
 
-      if (activeStage !== state.stage) {
-        state.stage = activeStage;
-        onStageChange(activeStage);
-      }
+      state.stage = activeStage;
 
       // Parallax mouse follow offset based on screen inputs
       const parallaxX = state.mouseX * 0.45;
@@ -1085,17 +1085,12 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       ringGeo.dispose();
       ringMat.dispose();
     };
-  }, [onStageChange]);
-
-  // Synchronize dynamic progress updates manually to the ref
-  useEffect(() => {
-    // Keep target progress stored in our animation coordinate system
-  }, [scrollProgress]);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      className="absolute top-0 left-0 w-full h-full overflow-hidden select-none pointer-events-auto"
+      className="absolute top-0 left-0 w-full h-full overflow-hidden select-none pointer-events-none"
       style={{ zIndex: 0 }}
     >
       <canvas ref={canvasRef} className="w-full h-full block" />

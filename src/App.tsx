@@ -3,21 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from "react";
-import { Stage } from "./types";
+import { useState, useEffect } from "react";
 import { SpatialCanvas } from "./components/SpatialCanvas";
 import { GTransHUD } from "./components/GTransHUD";
 import { FloatingProfileCards } from "./components/FloatingProfileCards";
+import { useScrollStage } from "./hooks/useScrollStage";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Sparkles, Orbit, Compass, Activity, ArrowUpRight } from "lucide-react";
+import { ArrowRight, Sparkles, Orbit, Activity } from "lucide-react";
 
 export default function App() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentStage, setCurrentStage] = useState<Stage>(Stage.MICRO_FILAMENT);
+  const { scrollProgress, currentStage, scrollVelocity, navigateToStage } =
+    useScrollStage();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  
-  const lastScrollY = useRef(0);
-  const scrollVelocity = useRef(0);
 
   // Stage details dictionary (Editorial Copy)
   const stageDetails = [
@@ -121,34 +118,6 @@ export default function App() {
     }
   ];
 
-  // Monitor Window Scroll Updates
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = maxScroll > 0 ? scrollY / maxScroll : 0;
-          
-          setScrollProgress(progress);
-
-          // Calculate scrolling velocity for real-time chromatic aberration
-          const deltaY = Math.abs(scrollY - lastScrollY.current);
-          scrollVelocity.current = Math.min(20, deltaY * 0.08); // cap for visual aesthetics
-          lastScrollY.current = scrollY;
-
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   // Monitor Cursor Coordinates for Raycasting parallax
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -161,40 +130,23 @@ export default function App() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const handleStageChange = (stage: Stage) => {
-    setCurrentStage(stage);
-  };
-
-  const handleNavigateToStage = (index: number) => {
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const targetScroll = (index / 6) * maxScroll;
-    window.scrollTo({
-      top: targetScroll,
-      behavior: "smooth"
-    });
-  };
-
-  // Map chromatic aberration based on scroll speed
-  const aberrationOffset = scrollVelocity.current > 0.5 ? `${scrollVelocity.current * 0.4}px` : "0px";
+  const handleNavigateToStage = navigateToStage;
 
   return (
-    <div className="relative min-h-[700vh] w-full bg-[#FAF9F5] selection:bg-neutral-100 overflow-visible">
-      
-      {/* Dynamic Chromatic Aberration & Glow Overlay Reactor */}
-      <div 
-        className="fixed inset-0 w-full h-full pointer-events-none transition-all duration-300 pointer-events-none z-45"
+    <div className="relative w-full bg-[#FAF9F5] selection:bg-neutral-100">
+      <div
+        className="fixed inset-0 w-full h-full pointer-events-none transition-all duration-300 z-[45]"
         style={{
-          boxShadow: scrollVelocity.current > 1.5 
-            ? `inset 0 0 40px rgba(124, 117, 107, ${Math.min(0.12, scrollVelocity.current * 0.01)})` 
-            : "none"
+          boxShadow:
+            scrollVelocity > 1.5
+              ? `inset 0 0 40px rgba(124, 117, 107, ${Math.min(0.12, scrollVelocity * 0.01)})`
+              : "none",
         }}
       />
 
-      {/* Analog Retro Shaders */}
       <div className="film-grain" />
       <div className="crt-overlay" />
 
-      {/* Custom Creative Technologist Cursor Circle */}
       <motion.div
         animate={{
           x: (mousePos.x + 0.5) * window.innerWidth - 6,
@@ -207,60 +159,36 @@ export default function App() {
         animate={{
           x: (mousePos.x + 0.5) * window.innerWidth - 24,
           y: (mousePos.y + 0.5) * window.innerHeight - 24,
-          scale: scrollVelocity.current > 1.2 ? 1.4 : 1,
+          scale: scrollVelocity > 1.2 ? 1.4 : 1,
         }}
         transition={{ type: "spring", stiffness: 450, damping: 30 }}
         className="fixed top-0 left-0 w-12 h-12 rounded-full border border-neutral-400/40 z-50 pointer-events-none mix-blend-difference hidden md:block"
       />
 
-      {/* 3D Spatial Canvas Framework */}
-      <div className="fixed inset-0 w-full h-full z-0 block">
-        <SpatialCanvas 
-          scrollProgress={scrollProgress} 
-          mousePos={mousePos}
-          onStageChange={handleStageChange}
-        />
+      <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
+        <SpatialCanvas scrollProgress={scrollProgress} mousePos={mousePos} />
       </div>
 
-      {/* Persistent HUD & Left Navigation Indicatings */}
-      <GTransHUD 
-        currentStage={currentStage} 
+      <GTransHUD
+        currentStage={currentStage}
         scrollProgress={scrollProgress}
         stageDetails={stageDetails}
         onNavigateToStage={handleNavigateToStage}
       />
 
-      {/* Floating Glassmorphic 3D cards overlays */}
-      <FloatingProfileCards 
+      <FloatingProfileCards
         currentStage={currentStage}
         scrollProgress={scrollProgress}
       />
 
-      {/* ---------------- 7 INVISIBLE HEIGHT STAGES TO SUPPORT NATURAL SCROLL ---------------- */}
-      <div className="relative z-1 pointer-events-none">
-        
-        {/* Section 1: Micro-Filament Sync */}
-        <section className="h-[100vh]" />
-
-        {/* Section 2: Collective Bento */}
-        <section className="h-[100vh]" />
-
-        {/* Section 3: Geopolitical Melt */}
-        <section className="h-[100vh]" />
-
-        {/* Section 4: Celestial Globe */}
-        <section className="h-[100vh]" />
-
-        {/* Section 5: Planetary Hwy */}
-        <section className="h-[100vh]" />
-
-        {/* Section 6: Galactic Warp */}
-        <section className="h-[100vh]" />
-
-        {/* Section 7: G.trans Climax Center */}
-        <section className="h-[100vh] relative">
-          
-          {/* Final climax grand scale call-to-action layout overlay */}
+      <div id="scrolly-sections" className="relative z-[1] pointer-events-none">
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen" aria-hidden="true" />
+        <section className="h-screen relative" aria-hidden="true">
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
             <AnimatePresence>
               {scrollProgress > 0.95 && (
@@ -268,11 +196,20 @@ export default function App() {
                   initial={{ opacity: 0, y: 100 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -40 }}
-                  transition={{ type: "spring", damping: 30, stiffness: 100, delay: 0.2 }}
+                  transition={{
+                    type: "spring",
+                    damping: 30,
+                    stiffness: 100,
+                    delay: 0.2,
+                  }}
                   className="w-full max-w-xl text-center bg-white/70 backdrop-blur-2xl rounded-3xl p-8 md:p-12 border border-neutral-200/50 shadow-2xl flex flex-col items-center gap-6 pointer-events-auto"
                 >
                   <div className="w-12 h-12 rounded-full border border-neutral-300/60 bg-neutral-50 flex items-center justify-center shadow-inner">
-                    <Orbit size={20} className="text-neutral-750 animate-spin" style={{ animationDuration: '6s' }} />
+                    <Orbit
+                      size={20}
+                      className="text-neutral-750 animate-spin"
+                      style={{ animationDuration: "6s" }}
+                    />
                   </div>
 
                   <div className="space-y-4">
@@ -280,25 +217,31 @@ export default function App() {
                       THE ULTIMATE NEXUS REACHED
                     </span>
                     <h1 className="font-display font-black text-4xl md:text-5xl text-neutral-900 tracking-tighter leading-none">
-                      Connecting the Universe.<br />
+                      Connecting the Universe.
+                      <br />
                       <span className="text-neutral-500 font-light">G.trans</span>
                     </h1>
                     <p className="font-sans text-neutral-500 text-xs md:text-sm max-w-md mx-auto leading-relaxed">
-                      All linguistic walls have completely dissolved. The universe is unified under an infinite, fluidly morphing space system. Start your borderless connection today.
+                      All linguistic walls have completely dissolved. The universe is
+                      unified under an infinite, fluidly morphing space system. Start
+                      your borderless connection today.
                     </p>
                   </div>
 
-                  {/* Buttons and triggers */}
                   <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center pt-2">
                     <button
-                      onClick={() => alert("G.trans Spatial Network is fully synchronized. Ready for data streams.")}
+                      onClick={() =>
+                        alert(
+                          "G.trans Spatial Network is fully synchronized. Ready for data streams.",
+                        )
+                      }
                       className="w-full sm:w-auto px-6 py-3.5 rounded-full text-xs font-semibold font-mono tracking-wider bg-neutral-900 text-[#FAF9F5] hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 hover:shadow-neutral-900/10 cursor-pointer pointer-events-auto"
                       id="launch-node-btn"
                     >
                       LAUNCH UNIVERSAL NODE
                       <ArrowRight size={13} />
                     </button>
-                    
+
                     <button
                       onClick={() => handleNavigateToStage(0)}
                       className="w-full sm:w-auto px-6 py-3.5 rounded-full text-xs font-semibold font-mono tracking-wider border border-neutral-350 bg-transparent text-neutral-700 hover:bg-neutral-100/50 transition-all active:scale-95 cursor-pointer pointer-events-auto"
@@ -308,7 +251,6 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Live network stats footer */}
                   <div className="w-full mt-4 pt-6 border-t border-neutral-200/50 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono text-neutral-400">
                     <span className="flex items-center gap-1">
                       <Sparkles size={11} className="text-neutral-500" />
@@ -324,11 +266,8 @@ export default function App() {
               )}
             </AnimatePresence>
           </div>
-
         </section>
-
       </div>
-
     </div>
   );
 }
